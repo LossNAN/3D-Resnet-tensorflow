@@ -37,11 +37,20 @@ def get_data(filename, num_frames_per_clip=64, s_index=0):
             return [], s_index, True
         if (len(filenames)-s_index) <= num_frames_per_clip:
             filenames = sorted(filenames)
-            for i in range(num_frames_per_clip):
-                image_name = str(filename) + '/' + str(filenames[len(filenames)-num_frames_per_clip+i])
-                img = Image.open(image_name)
-                img_data = np.array(img)
-                ret_arr.append(img_data)
+            if len(filenames) < num_frames_per_clip:
+                for i in range(num_frames_per_clip):
+                    if i >= len(filenames):
+                        i = len(filenames)-1
+                    image_name = str(filename) + '/' + str(filenames[i])
+                    img = Image.open(image_name)
+                    img_data = np.array(img)
+                    ret_arr.append(img_data)
+            else:
+                for i in range(num_frames_per_clip):
+                    image_name = str(filename) + '/' + str(filenames[len(filenames)-num_frames_per_clip+i])
+                    img = Image.open(image_name)
+                    img_data = np.array(img)
+                    ret_arr.append(img_data)
             return ret_arr, s_index, True
     filenames = sorted(filenames)
     for i in range(s_index, s_index + num_frames_per_clip):
@@ -67,6 +76,15 @@ def get_frames_data(filename, num_frames_per_clip, s_index, add_flow):
     flow_y = np.expand_dims(flow_y, axis=-1)
     flow_ret_arr = np.concatenate((flow_x, flow_y), axis=-1)
     return rgb_ret_arr, flow_ret_arr, s_index, is_end
+
+
+def get_frames(filename, s_index, num_frames_per_clip, crop_size, add_flow):
+    ''' Given a directory containing extracted frames, return a video clip of
+    (num_frames_per_clip) consecutive frames as a list of np arrays '''
+    rgb_ret_arr, _s_index, _ = get_data(filename, num_frames_per_clip, int(s_index))
+    rgb_ret_arr = data_process(rgb_ret_arr, crop_size)
+    if not add_flow:
+        return rgb_ret_arr, [], _s_index
 
 
 def data_process(tmp_data, crop_size):
