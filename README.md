@@ -1,6 +1,6 @@
 # Inflate_ResNet2D_3D
 Inflate 2dresnet to 3dresnet and use imagenet2d pretrain for train kinetics by tensorflow  
-![image]https://github.com/LossNAN/Inflate_ResNet2D_3D/tree/master/others/Inflated-resnet.jpg)
+![image](https://github.com/LossNAN/Inflate_ResNet2D_3D/tree/master/others/Inflated-resnet.jpg)
 ### This code also for training your own dataset
 ### Setup
 First follow the instructions for [install I3D-Tensorflow](https://github.com/LossNAN/I3D-Tensorflow)<br>
