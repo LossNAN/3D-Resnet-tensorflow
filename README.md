@@ -36,7 +36,7 @@ python multi_gpu_train.py
 >>3>models will be stored at ./models, and tensorboard logs will be stored at ./visul_logs
 
 ```linux
-tensorboard --logdir=~path/I3D/experiments/ucf_101/visual_logs/
+tensorboard --logdir=~path/experiments/Kinetics-400/visual_logs/
 ```
 ### 3.Test your own models
 >>1>if you get path errors, please modify by yourself
