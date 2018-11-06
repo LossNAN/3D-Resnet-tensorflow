@@ -9,7 +9,7 @@ $git clone https://github.com/LossNAN/Inflate_ResNet2D_3D.git
 ```
 ## How to use our code?
 ### 1.Data_process
->>1>download Kinetics dataset by yourself, also can get the dataset by contact me by [email](zhikunlin.uestc@gmail.com)<br>
+>>1>download Kinetics dataset by yourself, also can get the dataset by contact me by [zhikunlin.uestc@gmail.com]<br>
 >>2>extract RGB frames by your self(25fps or 30fps), such as:<br>
 * ~PATH/Kinetics/train_256/abseiling/-3B32lodo2M_000059_000069 for rgb frames<br>
 >>3>convert images to list for train and test<br>
@@ -45,11 +45,11 @@ cd ./experiments/kinetics-400
 python multi_gpu_test.py
 ```
 ### 4.Result on my linux
-  Architecture | Pre_train | ACC/top1
-  ------------- | -------------  | -------------
- RGB+I3D  |    Kinetics  |86.6
- FLOW+I3D |    Kinetics  |91.8
- TWO_STREAM+I3D  |   Kinetics  |95.3
- FLOW+I3D | IMAGENET+Kinetics  |94.72
- RGB+I3D  | IMAGENET+Kinetics  |95.68
- TWO_STREAM+I3D | IMAGENET+Kinetics  |97.6
+  Architecture | Iters | Pre_train | ACC/top1
+  ------------- | -------------  | ------------- | -------------
+ I3D_baseline  |  15k  | IMAGENET  |86.6
+ I3D_baseline  |  30k  | IMAGENET  |86.6
+ I3D_baseline  |  40k  | IMAGENET  |86.6
+ I3D_nonlocal  |  15k  | I3D-IMAGENET  |86.6
+ I3D_nonlocal  |  30k  | I3D-IMAGENET  |86.6
+ I3D_nonlocal  |  40k  | I3D-IMAGENET  |86.6
