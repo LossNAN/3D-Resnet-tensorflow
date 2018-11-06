@@ -12,18 +12,18 @@ from tensorflow.python.training import moving_averages
 class ResNet(object):
     """ResNet model."""
 
-    def __init__(self, hps, images, labels, mode, use_nonlocal, gup_id=0):
+    def __init__(self, hps, clips, labels, mode, use_nonlocal, gup_id=0):
         """ResNet constructor.
 
         Args:
           hps: Hyperparameters.
-          images: Batches of images 图片. [batch_size, image_size, image_size, 3]
-          labels: Batches of labels 类别标签. [batch_size, num_classes]
+          clips: Batches of clips . [batch_size, frames, crop_size, crop_size, channels]
+          labels: Batches of labels . [batch_size, num_classes]
           mode: One of 'train' and 'test'
           use_nonlocal: One of 'use_nonlocal' and 'no_nonlocal'
         """
         self.hps = hps
-        self._images = images
+        self._clips = clips
         self.labels = labels
         self.mode = mode
         self.use_nonlocal = use_nonlocal
@@ -40,10 +40,9 @@ class ResNet(object):
     # build_model
     def _build_model(self):
         with tf.variable_scope('scale1'):
-            x = self._images
+            x = self._clips
             x = self._conv3d('conv1', x, [5,7,7], 3, 64, self._stride_arr([1,2,2]))
             x = self._batch_norm('conv1_bn', x)
-            print(x)
             x = self._relu(x, self.hps.relu_leakiness)
         print(x.shape)
         x = tf.nn.max_pool3d(x, ksize=[1, 3, 3, 3, 1], strides=[1, 1, 2, 2, 1],
