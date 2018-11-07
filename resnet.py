@@ -39,12 +39,12 @@ class ResNet(object):
 
     # build_model
     def _build_model(self):
+        print('Building %s model on GPU_%d.......'%(self.mode, self.gpu_id))
         with tf.variable_scope('scale1'):
             x = self._clips
             x = self._conv3d('conv1', x, [5,7,7], 3, 64, self._stride_arr([1,2,2]))
             x = self._batch_norm('conv1_bn', x)
             x = self._relu(x, self.hps.relu_leakiness)
-        print(x.shape)
         x = tf.nn.max_pool3d(x, ksize=[1, 3, 3, 3, 1], strides=[1, 1, 2, 2, 1],
                                padding='SAME', name='pool1')
         # configs
@@ -63,7 +63,6 @@ class ResNet(object):
             for i in six.moves.range(1, block_num[0]):
                 with tf.variable_scope('block%d' % (i+1)):
                     x = res_func(x, filters[1], filters[1], self._stride_arr([1,1,1]), False, inflate=True)
-        print(x.shape)
         x = tf.nn.max_pool3d(x, ksize=[1, 3, 1, 1, 1], strides=[1, 2, 1, 1, 1],
                                padding='SAME', name='pool2')
         # res3
@@ -81,7 +80,6 @@ class ResNet(object):
                             x = self._nonlocal(x, out_channels=512, name='NonLocalBlock')
                     else:
                         x = res_func(x, filters[2], filters[2], self._stride_arr([1,1,1]), False, inflate=True)
-        print(x.shape)
 
         # res4
         with tf.variable_scope('scale4'):
@@ -98,7 +96,6 @@ class ResNet(object):
                             x = self._nonlocal(x, out_channels=1024, name='NonLocalBlock')
                     else:
                         x = res_func(x, filters[3], filters[3], self._stride_arr([1,1,1]), False, inflate=True)
-        print(x.shape)
 
         # res5
         with tf.variable_scope('scale5'):
@@ -113,10 +110,8 @@ class ResNet(object):
                         x = res_func(x, filters[4], filters[4], self._stride_arr([1,1,1]), False, inflate=True)
                     else:
                         x = res_func(x, filters[4], filters[4], self._stride_arr([1,1,1]), False, inflate=False)
-        print(x.shape)
         x = tf.nn.avg_pool3d(x, ksize=[1, 4, 7, 7, 1], strides=[1, 1, 1, 1, 1],
                                padding='VALID', name='pool5')
-        print(x.shape)
         if self.mode == 'train':
             x = tf.nn.dropout(x, keep_prob=0.5)
 
@@ -124,7 +119,6 @@ class ResNet(object):
         if self.mode == 'test':
             with tf.variable_scope('averagePool'):
                 x = self._global_avg_pool(x)
-                print(x.shape)
 
         # fc + Softmax
         with tf.variable_scope('fc'):
@@ -302,7 +296,6 @@ class ResNet(object):
 
         b = tf.get_variable('biases', [out_dim], initializer=tf.constant_initializer())
         x = tf.nn.xw_plus_b(x, w, b)
-        print(x.shape)
         return x
 
     # _global_avg_pool
