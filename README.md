@@ -37,16 +37,16 @@ python multi_gpu_train.py
 >>3>models will be stored at ./models, and tensorboard logs will be stored at ./visul_logs
 ```linux
 tensorboard --logdir=~path/experiments/Kinetics-400/visual_logs/
->>4>train-error-curve
+### 3.Train-error-curve
 <img align=center width="600" height="500" src="https://github.com/LossNAN/Inflate_ResNet2D_3D/blob/master/others/curve.png" alt="error-curve"/>
 ```
-### 3.Test your own models
+### 4.Test your own models
 >>1>if you get path errors, please modify by yourself
 ```linux
 cd ./experiments/kinetics-400
 python multi_gpu_test.py
 ```
-### 4.Result on my linux
+### 5.Result on my linux
   Architecture | Iters | Pre_train | ACC/top1
   ------------- | -------------  | ------------- | -------------
  I3D_baseline  |  15k  | IMAGENET  |86.6
