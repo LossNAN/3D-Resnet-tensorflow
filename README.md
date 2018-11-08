@@ -39,7 +39,9 @@ python multi_gpu_train.py
 tensorboard --logdir=~path/experiments/Kinetics-400/visual_logs/
 ```
 ### 3.Train-error-curve
+
 <img align=center width="350" height="200" src="https://github.com/LossNAN/Inflate_ResNet2D_3D/blob/master/others/curve.png" alt="error-curve"/>
+
 ### 4.Test your own models
 >>1>if you get path errors, please modify by yourself
 ```linux
