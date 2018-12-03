@@ -44,7 +44,7 @@ tensorboard --logdir=~path/experiments/Kinetics-400/visual_logs/
 <img align=center width="350" height="200" src="https://github.com/LossNAN/3D-Resnet-tensorflow/blob/master/others/paper-curve.png" alt="paper-curve"/>
 
 #### 2.Our-curve
-<img align=center width="350" height="200" src="https://github.com/LossNAN/3D-Resnet-tensorflow/blob/master/others/curve.png" alt="error-curve"/>
+<img align=center width="350" height="200" src="https://github.com/LossNAN/3D-Resnet-tensorflow/blob/master/others/curve2.png" alt="error-curve"/>
 
 ### 4.Test your own models
 >>1>if you get path errors, please modify by yourself
@@ -53,11 +53,6 @@ cd ./experiments/kinetics-400
 python multi_gpu_test.py
 ```
 ### 5.Result on my linux
-  Architecture | Iters | Pre_train | ACC/top1
+  Architecture | Iters | Pre_train | ACC/top1/top5
   ------------- | -------------  | ------------- | -------------
- I3D_baseline  |  15k  | IMAGENET  |86.6
- I3D_baseline  |  30k  | IMAGENET  |86.6
- I3D_baseline  |  40k  | IMAGENET  |86.6
- I3D_nonlocal  |  15k  | I3D-IMAGENET  |86.6
- I3D_nonlocal  |  30k  | I3D-IMAGENET  |86.6
- I3D_nonlocal  |  40k  | I3D-IMAGENET  |86.6
+ I3D_baseline  |  60k  | IMAGENET  |66.3/86.7
