@@ -14,7 +14,6 @@ class ResNet(object):
 
     def __init__(self, hps, clips, labels, mode, use_nonlocal, gup_id=0):
         """ResNet constructor.
-
         Args:
           hps: Hyperparameters.
           clips: Batches of clips . [batch_size, frames, crop_size, crop_size, channels]
@@ -63,6 +62,7 @@ class ResNet(object):
             for i in six.moves.range(1, block_num[0]):
                 with tf.variable_scope('block%d' % (i+1)):
                     x = res_func(x, filters[1], filters[1], self._stride_arr([1,1,1]), False, inflate=True)
+                    
         x = tf.nn.max_pool3d(x, ksize=[1, 3, 1, 1, 1], strides=[1, 2, 1, 1, 1],
                                padding='SAME', name='pool2')
         # res3
@@ -285,7 +285,7 @@ class ResNet(object):
 
     # leaky ReLU
     def _relu(self, x, leakiness=0.0):
-        return tf.where(tf.less(x, 0.0), leakiness * x, x, name='leaky_relu')
+        return tf.nn.relu(x)
 
     # fc
     def _fully_connected(self, x, out_dim):

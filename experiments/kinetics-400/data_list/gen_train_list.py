@@ -24,10 +24,12 @@ for file_path in sorted(os.listdir(root_path)):
         else:
             erro_data.append(os.path.join(root_path, file_path, video_path))
     label += 1
+    if label == 100:
+        break
 print(erro_data)
 print(len(data_list))
 print(len(id_list))
 print(len(label_list))
 
-np.save('./train_data_list.npy', data_list)
-np.save('./train_label_list.npy', label_list)
+np.save('./train_data_list_%d.npy'%label, data_list)
+np.save('./train_label_list_%d.npy'%label, label_list)

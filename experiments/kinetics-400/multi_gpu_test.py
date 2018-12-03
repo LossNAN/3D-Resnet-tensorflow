@@ -34,9 +34,10 @@ from collections import namedtuple
 # Basic model parameters as external flags.
 flags = tf.app.flags
 gpu_num = 4
-flags.DEFINE_integer('batch_size', 6, 'Batch size.')
-flags.DEFINE_integer('num_frame_per_clib', 16, 'Nummber of frames per clib')
+flags.DEFINE_integer('batch_size', 8, 'Batch size.')
+flags.DEFINE_integer('num_frame_per_clib', 64, 'Nummber of frames per clib')
 flags.DEFINE_integer('crop_size', 256, 'Crop_size')
+flags.DEFINE_integer('sample_rate', 8, 'Sample rate for clib')
 flags.DEFINE_integer('rgb_channels', 3, 'Channels for input')
 flags.DEFINE_integer('classics', 400, 'The num of class')
 flags.DEFINE_integer('block_num', 0, 'The num of nonlocal block')
@@ -52,24 +53,32 @@ hps = HParams(FLAGS.batch_size, FLAGS.classics, True, FLAGS.weight_decay, 0)
 def run_training():
 	# Get the sets of images and labels for training, validation, and
 	# Tell TensorFlow that the model will be built into the default Graph.
-	pre_model_save_dir = './models/4GPU_sgd0block_i3d_400000_6_64_0.0001_decay'
+	pre_model_save_dir = './models/4GPU_sgd0block_i3d_600000_8_64_0.0001_decay'
 
-	video_path_list = np.load('./data_list/data_list.npy')
-	id_list = np.load('./data_list/id_list.npy')
-	labels = np.load('./data_list/label_list.npy')
+	# video_path_list = np.load('./data_list/test_data_list.npy')
+	# id_list = np.load('./data_list/test_id_list.npy')
+	# labels = np.load('./data_list/test_label_list.npy')
+	video_path_list = np.load('./data_list/test_data_list_400_3times.npy')
+	id_list = np.load('./data_list/test_id_list_400_3times.npy')
+	labels = np.load('./data_list/test_label_list_400_3times.npy')
+	position_list = np.load('./data_list/test_position_list_400_3times.npy')
+
 	
 	with tf.Graph().as_default(), tf.device('/cpu:0'):
-		train_input_queue = tf.train.slice_input_producer([video_path_list, id_list], num_epochs=1, shuffle=False)
+		train_input_queue = tf.train.slice_input_producer([video_path_list, id_list, position_list], num_epochs=1, shuffle=False)
 		video_path = train_input_queue[0]
 		train_ids = train_input_queue[1]
+		position = train_input_queue[2]
 
-		rgb_train_images, _, _ = tf.py_func(func=input_test_data.get_frames,
-				   inp=[video_path[0],video_path[1],FLAGS.num_frame_per_clib,FLAGS.crop_size,False],
+		rgb_train_images, _, _ = tf.py_func(func=input_data.get_frames,
+				   inp=[video_path[0],video_path[1],FLAGS.num_frame_per_clib,FLAGS.crop_size,FLAGS.sample_rate,False,position],
 				   Tout=[tf.float32, tf.double, tf.int64],
 				   )
 
+		#rgb_train_images = Normalization(rgb_train_images, FLAGS.num_frame_per_clib/8)
+
 		batch_videos, batch_ids = tf.train.batch([rgb_train_images, train_ids], batch_size=FLAGS.batch_size*gpu_num, capacity=200,
-												num_threads=20, shapes=[(FLAGS.num_frame_per_clib,FLAGS.crop_size,FLAGS.crop_size,3), ()])
+												num_threads=20, shapes=[(FLAGS.num_frame_per_clib/FLAGS.sample_rate,FLAGS.crop_size,FLAGS.crop_size,3), ()])
 
 		norm_score = []
 		with tf.variable_scope(tf.get_variable_scope()):

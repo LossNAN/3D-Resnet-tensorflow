@@ -17,6 +17,7 @@
 # pylint: disable=missing-docstring
 import os
 import sys
+
 sys.path.append('../../')
 import time
 import numpy
@@ -31,14 +32,14 @@ import Train as train_net
 from resnet import ResNet
 from collections import namedtuple
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "4,5,6,7"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
 
 # Basic model parameters as external flags.
 flags = tf.app.flags
 gpu_num = 4
 flags.DEFINE_float('learning_rate', 0.01, 'Initial learning rate.')
-flags.DEFINE_integer('max_steps', 400000, 'Number of steps to run trainer.')
-flags.DEFINE_integer('batch_size', 6, 'Batch size.')
+flags.DEFINE_integer('max_steps', 600000, 'Number of steps to run trainer.')
+flags.DEFINE_integer('batch_size', 8, 'Batch size.')
 flags.DEFINE_integer('num_frame_per_clib', 64, 'Nummber of frames per clib')
 flags.DEFINE_integer('sample_rate', 8, 'Sample rate for clib')
 flags.DEFINE_integer('crop_size', 224, 'Crop_size')
@@ -51,12 +52,13 @@ flags.DEFINE_float('weight_decay', 0.0001, 'weight decay')
 FLAGS = flags.FLAGS
 
 pre_model_save_dir = '../../checkpoints/resnet_pretrain/inflated_50'
-#pre_model_save_dir = './models/4GPU_sgd0block_i3d_400000_6_64_0.0001_decay'
-model_save_dir = './models/%dGPU_sgd%dblock_i3d_400000_%d_64_0.0001_decay'%(gpu_num, FLAGS.block_num, FLAGS.batch_size)
+# pre_model_save_dir = './models/4GPU_sgd0block_i3d_400000_6_64_0.0001_decay'
+model_save_dir = './models/%dGPU_sgd%dblock_i3d_600000_%d_64_0.0001_decay' % (gpu_num, FLAGS.block_num, FLAGS.batch_size)
 
 HParams = namedtuple('HParams',
                      ['batch_size', 'num_classes', 'use_bottleneck', 'weight_decay_rate', 'relu_leakiness'])
 hps = HParams(FLAGS.batch_size, FLAGS.classics, True, FLAGS.weight_decay, 0)
+
 
 def run_training():
     # Create model directory
@@ -68,6 +70,7 @@ def run_training():
         global_step = tf.get_variable(
             'global_step',
             [],
+            dtype=tf.int32,
             initializer=tf.constant_initializer(0),
             trainable=False
         )
@@ -76,15 +79,17 @@ def run_training():
         train_label = train_input_queue[1]
 
         rgb_train_images, _, _ = tf.py_func(func=input_data.get_frames,
-                   inp=[video_path,FLAGS.num_frame_per_clib,FLAGS.crop_size,FLAGS.sample_rate,False],
-                   Tout=[tf.float32, tf.double, tf.int64],
-                   )
+                                            inp=[video_path, -1, FLAGS.num_frame_per_clib, FLAGS.crop_size,
+                                                 FLAGS.sample_rate, False],
+                                            Tout=[tf.float32, tf.double, tf.int64],
+                                            )
 
-        batch_videos, batch_labels = tf.train.batch([rgb_train_images, train_label], batch_size=FLAGS.batch_size*gpu_num, capacity=200,
-                                                num_threads=20, shapes=[(FLAGS.num_frame_per_clib/FLAGS.sample_rate,FLAGS.crop_size,FLAGS.crop_size,3), ()])
+        batch_videos, batch_labels = tf.train.batch([rgb_train_images, train_label],
+                                                    batch_size=FLAGS.batch_size * gpu_num, capacity=300,
+                                                    num_threads=30, shapes=[(FLAGS.num_frame_per_clib / FLAGS.sample_rate, FLAGS.crop_size, FLAGS.crop_size, 3), ()])
 
-        learning_rate = tf.train.exponential_decay(FLAGS.learning_rate, global_step, decay_steps=150000, decay_rate=0.1,
-                                                   staircase=True)
+        #learning_rate = tf.train.exponential_decay(FLAGS.learning_rate, global_step, decay_steps=150000, decay_rate=0.1, staircase=True)
+        learning_rate = tf.train.piecewise_constant(global_step, [200000, 300000, 350000], [1e-2, 1e-3, 1e-4, 1e-5])
         opt_rgb = tf.train.MomentumOptimizer(learning_rate, 0.9)
 
         tower_grads = []
@@ -96,7 +101,7 @@ def run_training():
                 with tf.device('/gpu:%d' % gpu_index):
                     with tf.name_scope('GPU_%d' % gpu_index):
                         NET = ResNet(hps,
-                                     batch_videos[gpu_index * FLAGS.batch_size:(gpu_index + 1) * FLAGS.batch_size, :, :, :,:],
+                                     batch_videos[gpu_index * FLAGS.batch_size:(gpu_index + 1) * FLAGS.batch_size, :, :, :, :],
                                      batch_labels[gpu_index * FLAGS.batch_size:(gpu_index + 1) * FLAGS.batch_size],
                                      'train',
                                      'no_nonlocal',
@@ -123,7 +128,7 @@ def run_training():
         i3d_map = {}
         for variable in tf.trainable_variables():
             if 'fc' not in variable.name and 'NonLocalBlock' not in variable.name:
-            #if 'NonLocalBlock' not in variable.name:
+                # if 'NonLocalBlock' not in variable.name:
                 i3d_map[variable.name.replace(':0', '')] = variable
         rgb_saver = tf.train.Saver(var_list=i3d_map, reshape=True)
 
@@ -136,7 +141,7 @@ def run_training():
 
         # Create summary writter
         tf.summary.scalar('accuracy', accuracy)
-        tf.summary.scalar('error', 1.0-accuracy)
+        tf.summary.scalar('error', 1.0 - accuracy)
         tf.summary.scalar('learning_rate', learning_rate)
         merged = tf.summary.merge_all()
 
@@ -146,26 +151,28 @@ def run_training():
         rgb_saver.restore(sess, ckpt.model_checkpoint_path)
         print("load complete!")
 
-    train_writer = tf.summary.FileWriter('./visual_logs/%dGPU_sgd%dblock_train_i3d_400000_%d_64_0.0001_decay'%(gpu_num, FLAGS.block_num, FLAGS.batch_size), sess.graph)
-    #test_writer = tf.summary.FileWriter('./visual_logs/%dGPU_sgd%dblock_test_i3d_400000_%d_64_0.0001_decay'%(gpu_num, FLAGS.batch_size, FLAGS.block_num), sess.graph)
+    train_writer = tf.summary.FileWriter('./visual_logs/%dGPU_sgd%dblock_train_i3d_600000_%d_64_0.0001_decay' % (
+    gpu_num, FLAGS.block_num, FLAGS.batch_size), sess.graph)
+    # test_writer = tf.summary.FileWriter('./visual_logs/%dGPU_sgd%dblock_test_i3d_400000_%d_64_0.0001_decay'%(gpu_num, FLAGS.batch_size, FLAGS.block_num), sess.graph)
 
     coord = tf.train.Coordinator()
     threads = tf.train.start_queue_runners(sess, coord)
-    
+
     for step in range(FLAGS.max_steps):
         start_time = time.time()
         sess.run(train_op)
         duration = time.time() - start_time
-        print('Step %d: %.3f sec, end time : after %.3f days' % (step, duration, (FLAGS.max_steps-step)*duration/86400))
-        
+        print('Step %d: %.3f sec, end time : after %.3f days' % (
+        step, duration, (FLAGS.max_steps - step) * duration / 86400))
+
         if step % 10 == 0 or (step + 1) == FLAGS.max_steps:
             print('Training Data Eval:')
             summary, acc, loss_rgb = sess.run([merged, accuracy, loss])
             print("accuracy: " + "{:.5f}".format(acc))
             print("rgb_loss: " + "{:.5f}".format(np.mean(loss_rgb)))
             train_writer.add_summary(summary, step)
-            
-        if (step+1) % 20000 == 0 or (step + 1) == 400000:
+
+        if (step + 1) % 20000 == 0 or (step + 1) == 600000:
             saver.save(sess, os.path.join(model_save_dir, 'nonlocal_kinetics_model'), global_step=step)
 
     coord.request_stop()

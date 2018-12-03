@@ -92,6 +92,14 @@ def rgb_placeholder_inputs(batch_size=16, num_frame_per_clib=16, crop_size=224, 
     return rgb_images_placeholder, labels_placeholder, is_training
 
 
+def Normalization(clips, frames_num):
+    new_clips = []
+    for index in range(frames_num):
+        clip = tf.image.per_image_standardization(clips[index])
+        new_clips.append(clip)
+    return new_clips
+
+
 def average_gradients(tower_grads):
     average_grads = []
     for grad_and_vars in zip(*tower_grads):
@@ -234,6 +242,8 @@ def topk(predicts, labels, ids):
     scores = {}
     top1_list = []
     top5_list = []
+    clips_top1_list = []
+    clips_top5_list = []
     start_time = time.time()
     print('Results process..............')
     for index in tqdm(range(len(predicts))):
@@ -244,6 +254,13 @@ def topk(predicts, labels, ids):
             scores['%d'%id].append(score)
         else:
             scores['%d'%id].append(score)
+        avg_pre_index = np.argsort(score).tolist()
+        top1 = (labels[id] in avg_pre_index[-1:])
+        top5 = (labels[id] in avg_pre_index[-5:])
+        clips_top1_list.append(top1)
+        clips_top5_list.append(top5)
+    print('Clips-----TOP_1_ACC in test: %f' % np.mean(clips_top1_list))
+    print('Clips-----TOP_5_ACC in test: %f' % np.mean(clips_top5_list))
     print('..............')
     for _id in range(len(labels)-1):
         avg_pre_index = np.argsort(np.mean(scores['%d'%_id], axis=0)).tolist()
@@ -251,22 +268,8 @@ def topk(predicts, labels, ids):
         top5 = (labels[_id] in avg_pre_index[-5:])
         top1_list.append(top1)
         top5_list.append(top5)
+    print('TOP_1_ACC in test: %f' % np.mean(top1_list))
+    print('TOP_5_ACC in test: %f' % np.mean(top5_list))
     duration = time.time() - start_time
     print('Time use: %.3f' % duration)
-    print('TOP_1_ACC in test: %f' % np.mean(top1_list))
-    print('TOP_5_ACC in test: %f' % np.mean(top5_list))
 
-def topk2(predicts, labels, ids):
-    top1_list = []
-    top5_list = []
-    for index in range(len(predicts)):
-        score = predicts[index]
-        id = ids[index]
-        avg_pre_index = np.argsort(score).tolist()
-        top1 = (labels[id] in avg_pre_index[-1:])
-        top5 = (labels[id] in avg_pre_index[-5:])
-        print(avg_pre_index[-5:], labels[id])
-        top1_list.append(top1)
-        top5_list.append(top5)
-    print('TOP_1_ACC in test: %f' % np.mean(top1_list))
-    print('TOP_5_ACC in test: %f' % np.mean(top5_list))
