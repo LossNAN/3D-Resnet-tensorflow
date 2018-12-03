@@ -44,7 +44,7 @@ tensorboard --logdir=~path/experiments/Kinetics-400/visual_logs/
 <img align=center width="350" height="200" src="https://github.com/LossNAN/3D-Resnet-tensorflow/blob/master/others/paper-curve.png" alt="paper-curve"/>
 
 #### 2.Our-curve
-<img align=center width="600" height="300" src="https://github.com/LossNAN/3D-Resnet-tensorflow/blob/master/others/curve2.png" alt="error-curve"/>
+<img align=center width="800" height="300" src="https://github.com/LossNAN/3D-Resnet-tensorflow/blob/master/others/curve2.png" alt="error-curve"/>
 
 ### 4.Test your own models
 >>1>if you get path errors, please modify by yourself
