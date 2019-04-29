@@ -10,7 +10,7 @@ $git clone https://github.com/LossNAN/Inflate_ResNet2D_3D.git
 ```
 ## How to use our code?
 ### 1.Data_process
->>1>download Kinetics dataset by yourself, also can get the dataset by contact me by [zhikunlin.uestc@gmail.com]<br>
+>>1>download Kinetics dataset by yourself, [dataset](https://www.dropbox.com/s/wcs01mlqdgtq4gn/compress.tar.gz?dl=0)<br>
 >>2>extract RGB frames by your self(25fps or 30fps), such as:<br>
 * ~PATH/Kinetics/train_256/abseiling/-3B32lodo2M_000059_000069 for rgb frames<br>
 >>3>convert images to list for train and test<br>
